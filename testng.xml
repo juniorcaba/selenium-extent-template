@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="Selenium Automation Suite" verbose="1" parallel="false">
+
+    <listeners>
+        <listener class-name="utils.ExtentTestListener"/>
+    </listeners>
+
+    <test name="Example Tests">
+        <parameter name="browser" value="chrome"/>
+        <parameter name="baseUrl" value="https://www.youtube.com/"/>
+
+        <classes>
+            <class name="tests.ExampleTest"/>
+        </classes>
+    </test>
+
+</suite>

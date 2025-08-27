@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screenshot-config>
+    <styles>
+        <style name="standard">
+            <container>margin: 15px 0;</container>
+            <image>max-width: 500px; width: 100%; height: auto; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s ease;</image>
+            <hover-in>this.style.transform="scale(1.02)"</hover-in>
+            <hover-out>this.style.transform="scale(1)"</hover-out>
+        </style>
+
+        <style name="error">
+            <container>margin: 15px 0;</container>
+            <image>max-width: 500px; width: 100%; height: auto; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 2px solid #ff4444; transition: transform 0.2s ease;</image>
+            <hover-in>this.style.transform="scale(1.02)"</hover-in>
+            <hover-out>this.style.transform="scale(1)"</hover-out>
+        </style>
+
+        <style name="success">
+            <container>margin: 15px 0;</container>
+            <image>max-width: 500px; width: 100%; height: auto; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 2px solid #4CAF50; transition: transform 0.2s ease;</image>
+            <hover-in>this.style.transform="scale(1.02)"</hover-in>
+            <hover-out>this.style.transform="scale(1)"</hover-out>
+        </style>
+
+        <style name="warning">
+            <container>margin: 15px 0;</container>
+            <image>max-width: 500px; width: 100%; height: auto; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 2px solid #FFA726; transition: transform 0.2s ease;</image>
+            <hover-in>this.style.transform="scale(1.02)"</hover-in>
+            <hover-out>this.style.transform="scale(1)"</hover-out>
+        </style>
+    </styles>
+
+    <modal>
+        <overlay-style>position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: none; justify-content: center; align-items: center; z-index: 10000;</overlay-style>
+        <modal-style>position: relative; max-width: 90%; max-height: 90%; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);</modal-style>
+        <modal-image-style>max-width: 100%; max-height: 80vh; height: auto; border-radius: 8px;</modal-image-style>
+        <close-button-style>position: absolute; top: 10px; right: 15px; background: #ff4444; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;</close-button-style>
+    </modal>
+
+    <messages>
+        <tooltip>Click para ver en tamaño completo</tooltip>
+        <error-screenshot>No se pudo capturar screenshot</error-screenshot>
+    </messages>
+</screenshot-config>
