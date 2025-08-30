@@ -11,44 +11,70 @@ public class ExampleTest extends BaseTest {
     public void verifyYouTubeHomePage() {
         ExamplePage youtubePage = new ExamplePage(getDriver());
 
-        // Navegar a YouTube
         youtubePage.navigateTo();
 
-        // Verificar que la página se cargó
         Assert.assertTrue(youtubePage.isPageLoaded(), "YouTube debería cargar correctamente");
 
-        // Verificar que la caja de búsqueda está presente
         Assert.assertTrue(youtubePage.isSearchBoxDisplayed(), "La caja de búsqueda debería estar visible");
 
-        // Verificar el título
         String title = youtubePage.getPageTitle();
         Assert.assertTrue(title.contains("YouTube"), "El título debe contener 'YouTube'");
 
-        // Verificar la URL
         String currentUrl = youtubePage.getCurrentUrl();
         Assert.assertTrue(currentUrl.contains("youtube.com"), "La URL debe contener 'youtube.com'");
+
+        Assert.assertTrue(youtubePage.validatePageElements(), "Todos los elementos de la página deben estar presentes");
     }
 
     @Test(description = "Realizar una búsqueda en YouTube")
     public void performBasicSearch() {
         ExamplePage youtubePage = new ExamplePage(getDriver());
 
-        // Navegar a YouTube
+        // Navegar a YouTube - ya maneja el reporte automáticamente
         youtubePage.navigateTo();
 
-        // Verificar que la página cargó
         Assert.assertTrue(youtubePage.isPageLoaded(), "YouTube debe cargar antes de buscar");
 
-        // Realizar búsqueda
         String searchTerm = "selenium automation tutorial";
         youtubePage.searchFor(searchTerm);
 
-        // Verificar que se redirigió a página de resultados
         String currentUrl = youtubePage.getCurrentUrl();
+
+        youtubePage.validateWithReport(
+            currentUrl.contains("results"),
+            "Navegación exitosa a página de resultados",
+            "No se navegó a la página de resultados. URL actual: " + currentUrl,
+            StepMode.IMMEDIATE
+        );
         Assert.assertTrue(currentUrl.contains("results"), "Debería estar en página de resultados");
 
-        // Verificar que el título cambió e incluye el término de búsqueda
         String title = youtubePage.getPageTitle();
+        youtubePage.validateWithReport(
+            title.contains(searchTerm),
+            "El título contiene el término de búsqueda: " + searchTerm,
+            "El título no contiene el término de búsqueda. Título actual: " + title,
+            StepMode.IMMEDIATE
+        );
         Assert.assertTrue(title.contains(searchTerm), "El título debe contener el término buscado");
     }
+
+    @Test(description = "Demostrar uso avanzado del sistema de buffer")
+    public void demonstrateBufferUsage() {
+        ExamplePage youtubePage = new ExamplePage(getDriver());
+        
+        createStep("Iniciando test de demostración", true, false, StepMode.BUFFER);
+        createStep("Preparando configuración inicial", true, false, StepMode.BUFFER);
+        createStep("Verificando precondiciones", true, false, StepMode.BUFFER);
+        processBuffer(BufferAction.COMMIT_SUCCESS, null, false);
+        
+        youtubePage.navigateTo(); 
+        boolean pageValid = youtubePage.isPageLoaded(); 
+
+        if (pageValid) {
+            createStep("Validación completa de página exitosa - Lista para pruebas adicionales", true, true, StepMode.IMMEDIATE);
+        }
+
+        Assert.assertTrue(pageValid, "La página debe ser válida");
+    }
+}
 }
