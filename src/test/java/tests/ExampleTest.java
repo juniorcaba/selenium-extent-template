@@ -8,7 +8,7 @@ import org.testng.annotations.Test;
 public class ExampleTest extends BaseTest {
 
     @Test(description = "Verificar que YouTube se carga correctamente")
-    public void verifyYouTubeHomePage() {
+    public void verifyYouTubeHomePage() throws InterruptedException {
         ExamplePage youtubePage = new ExamplePage(getDriver());
 
         youtubePage.navigateTo();
@@ -27,7 +27,7 @@ public class ExampleTest extends BaseTest {
     }
 
     @Test(description = "Realizar una búsqueda en YouTube")
-    public void performBasicSearch() {
+    public void performBasicSearch() throws InterruptedException {
         ExamplePage youtubePage = new ExamplePage(getDriver());
 
         // Navegar a YouTube - ya maneja el reporte automáticamente
@@ -59,7 +59,7 @@ public class ExampleTest extends BaseTest {
     }
 
     @Test(description = "Demostrar uso avanzado del sistema de buffer")
-    public void demonstrateBufferUsage() {
+    public void demonstrateBufferUsage() throws InterruptedException {
         ExamplePage youtubePage = new ExamplePage(getDriver());
         
         createStep("Iniciando test de demostración", true, false, StepMode.BUFFER);
@@ -76,5 +76,4 @@ public class ExampleTest extends BaseTest {
 
         Assert.assertTrue(pageValid, "La página debe ser válida");
     }
-}
 }
