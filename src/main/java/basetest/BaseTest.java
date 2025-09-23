@@ -1,20 +1,24 @@
 package basetest;
 
+import com.aventstack.extentreports.Status;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.edge.EdgeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.testng.annotations.*;
 import utils.ConfigReader;
 import utils.ExtentManager;
 import utils.ScreenshotUtils;
-import com.aventstack.extentreports.Status;
+
+// Importar logger
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.time.Duration;
@@ -23,6 +27,9 @@ import java.util.List;
 
 @Listeners(utils.ExtentTestListener.class)
 public class BaseTest {
+    // Agregar logger estático
+    private static final Logger logger = LoggerFactory.getLogger(BaseTest.class);
+
     private static ThreadLocal<WebDriver> driverThreadLocal = new ThreadLocal<>();
     private static ThreadLocal<List<PendingStep>> pendingStepsThreadLocal = new ThreadLocal<>();
 
@@ -66,15 +73,26 @@ public class BaseTest {
                     return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BASE64);
                 }
             } catch (Exception e) {
-                System.err.println("Error capturing screenshot: " + e.getMessage());
+                logger.error("Error capturing screenshot: {}", e.getMessage());
             }
             return null;
         }
 
-        public String getDescription() { return description; }
-        public boolean isPassed() { return isPassed; }
-        public boolean shouldTakeScreenshot() { return takeScreenshot; }
-        public String getScreenshotBase64() { return screenshotBase64; }
+        public String getDescription() {
+            return description;
+        }
+
+        public boolean isPassed() {
+            return isPassed;
+        }
+
+        public boolean shouldTakeScreenshot() {
+            return takeScreenshot;
+        }
+
+        public String getScreenshotBase64() {
+            return screenshotBase64;
+        }
     }
 
     @BeforeSuite
@@ -82,20 +100,24 @@ public class BaseTest {
         ExtentManager.createInstance();
         File reportsDir = new File(System.getProperty("user.dir") + "/reports");
         if (!reportsDir.exists()) {
-            reportsDir.mkdirs();
+            boolean created = reportsDir.mkdirs();
+            if (created) {
+                logger.info("Reports directory created successfully");
+            }
         }
 
         // Configuration summary
-        System.out.println("=== TEST CONFIGURATION ===");
+        logger.info("=== TEST CONFIGURATION ===");
         try {
-            System.out.println("Base URL: " + ConfigReader.getBaseUrl());
-            System.out.println("Browser: " + ConfigReader.getBrowser());
-            System.out.println("Headless: " + ConfigReader.isHeadless());
-            System.out.println("Timeout: " + ConfigReader.getTimeout());
-            System.out.println("===========================");
+            logger.info("Base URL: {}", ConfigReader.getBaseUrl());
+            logger.info("Browser: {}", ConfigReader.getBrowser());
+            logger.info("Headless: {}", ConfigReader.isHeadless());
+            logger.info("Timeout: {}", ConfigReader.getTimeout());
+            logger.info("===========================");
         } catch (Exception e) {
-            System.out.println("Using default configuration");
-            System.out.println("===========================");
+            logger.warn("Error reading configuration, using defaults: {}", e.getMessage());
+            logger.info("Using default configuration");
+            logger.info("============================");
         }
     }
 
@@ -115,6 +137,8 @@ public class BaseTest {
             String browser = ConfigReader.getBrowser().toLowerCase();
             boolean headless = ConfigReader.isHeadless();
 
+            logger.info("Creating {} driver (headless: {})", browser, headless);
+
             switch (browser) {
                 case "chrome":
                     return createChromeDriver(headless);
@@ -123,11 +147,12 @@ public class BaseTest {
                 case "edge":
                     return createEdgeDriver(headless);
                 default:
-                    System.out.println("Unknown browser: '" + browser + "'. Using Chrome as default.");
+                    logger.warn("Unknown browser: '{}'. Using Chrome as default.", browser);
                     return createChromeDriver(headless);
             }
         } catch (Exception e) {
-            System.err.println("Error creating driver: " + e.getMessage());
+            logger.error("Error creating driver: {}", e.getMessage());
+            logger.info("Falling back to basic Chrome driver");
             return createChromeDriver(false); // Fallback to basic Chrome
         }
     }
@@ -141,6 +166,7 @@ public class BaseTest {
         }
 
         options.addArguments(DISABLE_WEB_SECURITY_ARG, DISABLE_VIZ_COMPOSITOR_ARG);
+        logger.debug("Chrome driver created with options: {}", options.addArguments());
         return new ChromeDriver(options);
     }
 
@@ -152,6 +178,7 @@ public class BaseTest {
             options.addArguments(HEADLESS_ARG);
         }
 
+        logger.debug("Firefox driver created");
         return new FirefoxDriver(options);
     }
 
@@ -162,6 +189,8 @@ public class BaseTest {
             // Fallback to manual driver if WebDriverManager fails
             String edgeDriverPath = System.getProperty("user.dir") + "/src/main/resources/drivers/msedgedriver.exe";
             System.setProperty("webdriver.edge.driver", edgeDriverPath);
+
+            logger.warn("WebDriverManager failed for Edge, using manual path: {}", edgeDriverPath);
 
             File driverFile = new File(edgeDriverPath);
             if (!driverFile.exists()) {
@@ -176,6 +205,7 @@ public class BaseTest {
         }
 
         options.addArguments(DISABLE_WEB_SECURITY_ARG, DISABLE_VIZ_COMPOSITOR_ARG);
+        logger.debug("Edge driver created");
         return new EdgeDriver(options);
     }
 
@@ -184,9 +214,11 @@ public class BaseTest {
             int timeout = ConfigReader.getTimeout();
             driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(timeout));
             driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
+            logger.debug("Timeouts configured: implicit={}s, pageLoad=30s", timeout);
         } catch (Exception e) {
             driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
             driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
+            logger.warn("Error configuring timeouts, using defaults: {}", e.getMessage());
         }
     }
 
@@ -194,9 +226,11 @@ public class BaseTest {
         try {
             String baseUrl = ConfigReader.getBaseUrl();
             getDriver().get(baseUrl);
+            logger.info("Navigated to base URL: {}", baseUrl);
         } catch (Exception e) {
             String defaultUrl = "https://automationexercise.com";
-            System.err.println("Error getting base URL: " + e.getMessage());
+            logger.error("Error getting base URL: {}", e.getMessage());
+            logger.info("Using default URL: {}", defaultUrl);
             getDriver().get(defaultUrl);
         }
     }
@@ -207,8 +241,9 @@ public class BaseTest {
         if (driver != null) {
             try {
                 driver.quit();
+                logger.debug("WebDriver closed successfully");
             } catch (Exception e) {
-                System.err.println("Error closing driver: " + e.getMessage());
+                logger.error("Error closing driver: {}", e.getMessage());
             } finally {
                 driverThreadLocal.remove();
             }
@@ -225,6 +260,7 @@ public class BaseTest {
 
     @AfterSuite
     public void tearDownSuite() {
+        logger.info("Flushing extent reports");
         ExtentManager.flushReport();
     }
 
@@ -235,7 +271,7 @@ public class BaseTest {
             try {
                 driver.quit();
             } catch (Exception e) {
-                System.err.println("Error closing driver in @AfterTest: " + e.getMessage());
+                logger.error("Error closing driver in @AfterTest: {}", e.getMessage());
             } finally {
                 driverThreadLocal.remove();
             }
@@ -258,7 +294,9 @@ public class BaseTest {
     public static void navigateToUrl(String url) {
         try {
             getDriver().get(url);
+            logger.info("Navigated to URL: {}", url);
         } catch (Exception e) {
+            logger.error("Error navigating to URL {}: {}", url, e.getMessage());
             throw e;
         }
     }
@@ -270,8 +308,10 @@ public class BaseTest {
                 url = ConfigReader.getBaseUrl();
             }
             navigateToUrl(url);
+            logger.info("Switched to environment: {} (URL: {})", environment, url);
 
         } catch (Exception e) {
+            logger.error("Error switching to environment {}: {}", environment, e.getMessage());
             throw e;
         }
     }
@@ -286,14 +326,15 @@ public class BaseTest {
             }
 
             processBuffer(BufferAction.COMMIT_SUCCESS, null, false);
+            logger.info("Successfully navigated to page: {} ({})", pageName, pageUrl);
 
         } catch (Exception e) {
             String errorMsg = "Error navigating to " + pageName + ": " + e.getMessage();
             processBuffer(BufferAction.COMMIT_WITH_FAILURE, errorMsg, true);
+            logger.error("Failed to navigate to page: {} ({})", pageName, pageUrl, e);
             throw e;
         }
     }
-
 
     // Step Management Methods
     private static List<PendingStep> getPendingSteps() {
@@ -307,10 +348,11 @@ public class BaseTest {
 
     /**
      * Main method for creating test steps
-     * @param description Step description
-     * @param isPassed Whether the step passed or failed
+     *
+     * @param description    Step description
+     * @param isPassed       Whether the step passed or failed
      * @param takeScreenshot Whether to capture screenshot
-     * @param mode Processing mode (BUFFER, IMMEDIATE, STATIC)
+     * @param mode           Processing mode (BUFFER, IMMEDIATE, STATIC)
      */
     public static void createStep(String description, boolean isPassed, boolean takeScreenshot, StepMode mode) {
         switch (mode) {
@@ -327,9 +369,10 @@ public class BaseTest {
 
     /**
      * Main method for processing the step buffer
-     * @param action Action to perform with the buffer
+     *
+     * @param action             Action to perform with the buffer
      * @param failureDescription Failure description (if applicable)
-     * @param takeScreenshot Whether to capture failure screenshot (if applicable)
+     * @param takeScreenshot     Whether to capture failure screenshot (if applicable)
      */
     public static void processBuffer(BufferAction action, String failureDescription, boolean takeScreenshot) {
         List<PendingStep> steps = getPendingSteps();
@@ -363,7 +406,7 @@ public class BaseTest {
                     try {
                         failureScreenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BASE64);
                     } catch (Exception e) {
-                        System.err.println("Error capturing failure screenshot: " + e.getMessage());
+                        logger.error("Error capturing failure screenshot: {}", e.getMessage());
                     }
                 }
                 writeStepWithCustomScreenshot(mergedMessage, false, failureScreenshot);
@@ -380,7 +423,6 @@ public class BaseTest {
     // Private Step Writing Methods
     private static void writeStepDirectlyWithStoredScreenshot(PendingStep step) {
         if (ExtentManager.getTest() == null) {
-            System.err.println("No active test to create step: " + step.getDescription());
             return;
         }
 
@@ -403,7 +445,6 @@ public class BaseTest {
 
     private static void writeStepWithCustomScreenshot(String stepDescription, boolean isPassed, String screenshotBase64) {
         if (ExtentManager.getTest() == null) {
-            System.err.println("No active test to create step: " + stepDescription);
             return;
         }
 
@@ -425,7 +466,7 @@ public class BaseTest {
 
     private static void writeStepDirectly(String stepDescription, boolean isPassed, boolean takeScreenshot, WebDriver driver) {
         if (ExtentManager.getTest() == null) {
-            System.err.println("No active test to create step: " + stepDescription);
+            logger.warn("No active test to create step: {}", stepDescription);
             return;
         }
 
@@ -446,20 +487,19 @@ public class BaseTest {
         }
     }
 
-    public static void navigateToPage(String pageUrl) {
-        getDriver().get(pageUrl);
-    }
-
     public static void refreshPage() {
         getDriver().navigate().refresh();
+        logger.debug("Page refreshed");
     }
 
     public static void goBack() {
         getDriver().navigate().back();
+        logger.debug("Navigated back");
     }
 
     public static void goForward() {
         getDriver().navigate().forward();
+        logger.debug("Navigated forward");
     }
 
     public static String getPageTitle() {
@@ -467,7 +507,10 @@ public class BaseTest {
     }
 
     public static boolean isTitleContains(String expectedTitle) {
-        return getPageTitle().contains(expectedTitle);
+        String currentTitle = getPageTitle();
+        boolean contains = currentTitle.contains(expectedTitle);
+        logger.debug("Checking if title '{}' contains '{}': {}", currentTitle, expectedTitle, contains);
+        return contains;
     }
 
     public static void navigateToPageWithValidation(String pageUrl, String pageName) {
@@ -479,6 +522,9 @@ public class BaseTest {
     }
 
     public static boolean isOnExpectedUrl(String expectedUrl) {
-        return getCurrentUrl().contains(expectedUrl);
+        String currentUrl = getCurrentUrl();
+        boolean isOn = currentUrl.contains(expectedUrl);
+        logger.debug("Checking if current URL '{}' contains '{}': {}", currentUrl, expectedUrl, isOn);
+        return isOn;
     }
 }
