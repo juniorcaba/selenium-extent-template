@@ -74,6 +74,19 @@ public abstract class BasePage {
     }
 
     /**
+     * MÉTODO SIMPLE: navigateToPage()
+     * Solo navega a la URL, sin validaciones ni steps automáticos
+     */
+    public void navigateToPage() {
+        if (pageUrl == null) {
+            throw new RuntimeException("pageUrl no está definida para " + this.getClass().getSimpleName());
+        }
+
+        driver.get(pageUrl);
+    }
+
+
+    /**
      * Método para hacer click con reporte usando el sistema unificado
      * @param locator Localizador del elemento
      * @param description Descripción para el reporte
@@ -126,4 +139,3 @@ public abstract class BasePage {
         }
     }
 }
-
